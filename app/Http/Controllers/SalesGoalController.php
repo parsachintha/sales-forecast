@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\CompanyGoal;
+use App\Models\MarketingPlan;
 use App\Models\Rep;
 use App\Models\SalesGoal;
 use App\Services\ForecastService;
@@ -24,18 +26,35 @@ class SalesGoalController extends Controller
             $goal->achieved = $this->forecast->yearAchieved($goal);
         });
 
-        return view('forecast.index', compact('goals'));
+        $companyGoals = CompanyGoal::orderByDesc('year')->get();
+
+        return view('forecast.index', compact('goals', 'companyGoals'));
     }
 
-    /** Form: assign a new goal to a rep. */
-    public function create()
+    /** Form: assign a new goal (Company cascade mode or single rep mode). */
+    public function create(Request $request)
     {
-        return view('forecast.create', ['reps' => Rep::orderBy('name')->get()]);
+        $reps = Rep::orderBy('name')->get();
+        $marketingPlans = MarketingPlan::latest()->get();
+
+        // Optional pre-selected marketing plan
+        $selectedPlan = null;
+        if ($request->filled('plan_id')) {
+            $selectedPlan = MarketingPlan::find($request->input('plan_id'));
+        }
+
+        return view('forecast.create', compact('reps', 'marketingPlans', 'selectedPlan'));
     }
 
-    /** Save the goal and pre-fill 12 equal monthly targets. */
+    /** Save either a company-wide cascading goal or a single rep goal. */
     public function store(Request $request)
     {
+        // Check if this is the Company Cascading Goal flow
+        if ($request->input('goal_mode') === 'company') {
+            return $this->storeCompanyCascade($request);
+        }
+
+        // Standard Single Rep Goal flow
         $data = $request->validate([
             'rep_id'          => ['required', 'exists:reps,id'],
             'title'           => ['required', 'string', 'max:120'],
@@ -68,6 +87,108 @@ class SalesGoalController extends Controller
         return redirect()->route('forecast.show', $goal)->with('status', 'Goal created with 12 equal monthly targets.');
     }
 
+    /** Process cascading company product-wise goals to all selected sales reps. */
+    protected function storeCompanyCascade(Request $request)
+    {
+        $request->validate([
+            'company_title' => ['required', 'string', 'max:150'],
+            'year'          => ['required', 'integer', 'min:2020', 'max:2100'],
+            'rep_ids'       => ['required', 'array', 'min:1'],
+            'rep_ids.*'     => ['exists:reps,id'],
+            'products'      => ['required', 'array', 'min:1'],
+            'products.*.name' => ['required', 'string'],
+            'products.*.annual_target' => ['required', 'numeric', 'min:0'],
+        ]);
+
+        $repIds = array_map('intval', $request->input('rep_ids', []));
+        $repCount = count($repIds);
+        $productsInput = $request->input('products', []);
+        $year = (int) $request->input('year');
+        $companyTitle = $request->input('company_title');
+        $marketingPlanId = $request->input('marketing_plan_id') ?: null;
+
+        $totalCompanyTarget = 0;
+        $monthlyCompanyTotals = array_fill(1, 12, 0); // Month 1 to 12
+        $processedProducts = [];
+
+        foreach ($productsInput as $p) {
+            $name = trim($p['name'] ?? '');
+            $annual = (float) ($p['annual_target'] ?? 0);
+            $totalCompanyTarget += $annual;
+
+            // Monthly distribution for this product (1..12)
+            $pMonths = [];
+            for ($m = 1; $m <= 12; $m++) {
+                $mVal = isset($p['months'][$m]) ? (float) $p['months'][$m] : 0;
+                $pMonths[$m] = $mVal;
+                $monthlyCompanyTotals[$m] += $mVal;
+            }
+
+            $processedProducts[] = [
+                'name' => $name,
+                'annual_target' => $annual,
+                'months' => $pMonths,
+            ];
+        }
+
+        // Divide the monthly company totals across reps
+        // Each rep gets their share for Month 1..12
+        $repMonthlyShare = [];
+        $repAnnualTarget = 0;
+
+        for ($m = 1; $m <= 12; $m++) {
+            $monthTotal = $monthlyCompanyTotals[$m];
+            // Split monthly total evenly among the reps in whole rupees
+            $split = TargetMath::evenSplit((int) round($monthTotal), $repCount);
+            // $split has an entry for each rep index 0..($repCount-1)
+            $repMonthlyShare[$m] = $split;
+        }
+
+        DB::transaction(function () use ($repIds, $repCount, $year, $companyTitle, $totalCompanyTarget, $processedProducts, $repMonthlyShare, $marketingPlanId) {
+            // 1. Create or update CompanyGoal record
+            CompanyGoal::create([
+                'marketing_plan_id' => $marketingPlanId,
+                'title' => $companyTitle,
+                'year' => $year,
+                'total_annual_target' => (int) round($totalCompanyTarget),
+                'products' => $processedProducts,
+                'assigned_rep_ids' => $repIds,
+            ]);
+
+            // 2. Assign / Update SalesGoal for each selected rep
+            foreach ($repIds as $idx => $repId) {
+                // Calculate rep's annual sum from their monthly shares
+                $thisRepAnnual = 0;
+                $thisRepMonths = [];
+
+                for ($m = 1; $m <= 12; $m++) {
+                    $amount = $repMonthlyShare[$m][$idx] ?? 0;
+                    $thisRepMonths[$m] = $amount;
+                    $thisRepAnnual += $amount;
+                }
+
+                $salesGoal = SalesGoal::updateOrCreate(
+                    ['rep_id' => $repId, 'year' => $year],
+                    [
+                        'title' => $companyTitle . ' (Rep Target)',
+                        'target_amount' => $thisRepAnnual,
+                        'baseline_amount' => 0,
+                    ]
+                );
+
+                // Populate / update 12 months for this rep
+                foreach ($thisRepMonths as $month => $amount) {
+                    $salesGoal->months()->updateOrCreate(
+                        ['month' => $month],
+                        ['target_amount' => $amount, 'is_fixed' => true]
+                    );
+                }
+            }
+        });
+
+        return redirect()->route('forecast.index')->with('status', "Company goal successfully established! Targets cascaded across {$repCount} sales reps.");
+    }
+
     /** The 12-month forecast grid for one goal. */
     public function show(Request $request, SalesGoal $goal)
     {
@@ -81,47 +202,44 @@ class SalesGoalController extends Controller
         return view('forecast.show', compact('goal', 's', 'asOf'));
     }
 
-    /** Save edited monthly targets (optionally rebalancing the unfixed months). */
+    /** Manager modified individual month targets; rebalance if needed. */
     public function update(Request $request, SalesGoal $goal)
     {
         $request->validate([
-            'targets'   => ['required', 'array', 'size:12'],
+            'targets' => ['required', 'array', 'size:12'],
             'targets.*' => ['required', 'integer', 'min:0'],
-            'fixed'     => ['nullable', 'array'],
-            'as_of'     => ['nullable', 'date'],
+            'fixed' => ['nullable', 'array'],
+            'fixed.*' => ['nullable', 'boolean'],
+            'as_of' => ['nullable', 'date'],
         ]);
 
-        $targets = [];
-        $fixed   = [];
-        for ($m = 1; $m <= 12; $m++) {
-            $targets[$m] = (int) $request->input("targets.$m");
-            $fixed[$m]   = (bool) $request->input("fixed.$m");
+        $rawTargets = array_map('intval', $request->input('targets'));
+        $fixedMap = [];
+        foreach ($request->input('fixed', []) as $m => $v) {
+            $fixedMap[(int) $m] = (bool) $v;
         }
 
-        $message = 'Targets saved.';
+        $res = TargetMath::rebalance((int) $goal->target_amount, $rawTargets, $fixedMap);
 
-        if ($request->input('action') === 'rebalance') {
-            $result = TargetMath::rebalance((int) $goal->target_amount, $targets, $fixed);
-
-            if ($result['ok']) {
-                $targets = $result['targets'];
-                $message = 'Targets saved. Other months were rebalanced so the total still equals the annual goal.';
-            } else {
-                $message = 'Targets saved, but not rebalanced: ' . $result['message'];
-            }
+        if (! $res['ok']) {
+            return back()->withInput()->withErrors(['rebalance' => $res['message']]);
         }
 
-        DB::transaction(function () use ($goal, $targets, $fixed) {
-            foreach ($targets as $month => $amount) {
+        DB::transaction(function () use ($goal, $res, $fixedMap) {
+            foreach ($res['targets'] as $m => $amount) {
                 $goal->months()->updateOrCreate(
-                    ['month' => $month],
-                    ['target_amount' => $amount, 'is_fixed' => $fixed[$month]]
+                    ['month' => $m],
+                    [
+                        'target_amount' => $amount,
+                        'is_fixed' => ! empty($fixedMap[$m]),
+                    ]
                 );
             }
         });
 
-        return redirect()
-            ->route('forecast.show', ['goal' => $goal, 'as_of' => $request->input('as_of')])
-            ->with('status', $message);
+        $asOfParam = $request->filled('as_of') ? ['as_of' => $request->input('as_of')] : [];
+
+        return redirect()->route('forecast.show', array_merge(['goal' => $goal], $asOfParam))
+            ->with('status', $res['message']);
     }
 }

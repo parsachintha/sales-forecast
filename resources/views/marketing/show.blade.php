@@ -6,6 +6,9 @@
 <div class="no-print" style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
     <a href="{{ route('marketing-plan.index') }}" style="color:var(--mute); text-decoration:none; font-weight:600;">&larr; Back to all plans</a>
     <div style="display:flex; gap:10px;">
+        <a href="{{ route('forecast.create', ['plan_id' => $plan->id]) }}" class="btn" style="background:#059669; border-color:#047857;">
+            🎯 Cascade Section 9.1 to Reps
+        </a>
         <button onclick="window.print()" class="btn ghost">🖨️ Print / Save as PDF</button>
         <a href="{{ route('marketing-plan.edit', $plan) }}" class="btn">✏️ Edit Plan</a>
     </div>
