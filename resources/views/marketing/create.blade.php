@@ -18,6 +18,29 @@
 @section('scripts')
 <script>
 // Dynamic row addition & auto-calculation helpers
+function addSwotPoint(category) {
+    const container = document.getElementById(`swot-${category}-container`);
+    const div = document.createElement('div');
+    div.className = 'swot-row';
+    div.style.cssText = 'display:flex; gap:6px; align-items:center;';
+
+    const colors = {
+        strengths: '#16a34a',
+        weaknesses: '#dc2626',
+        opportunities: '#2563eb',
+        threats: '#d97706'
+    };
+    const color = colors[category] || '#16a34a';
+
+    div.innerHTML = `
+        <span style="color:${color}; font-weight:700;">•</span>
+        <input type="text" name="swot_${category}_list[]" value="" placeholder="Enter ${category.slice(0, -1)}..." style="flex:1;">
+        <button type="button" class="btn danger remove-swot-btn" style="padding:2px 6px; font-size:11px;">&times;</button>
+    `;
+    container.appendChild(div);
+    div.querySelector('input').focus();
+}
+
 function addRow(tableId, arrayName, fields, types = {}, isTextarea = false) {
     const table = document.getElementById(tableId);
     const tbody = table.querySelector('tbody');
@@ -57,7 +80,12 @@ function addMonthlyRow() {
         <td><input type="number" step="0.01" class="m-input m4 num" name="sales_forecast_monthly[${index}][m4]" value="0"></td>
         <td><input type="number" step="0.01" class="m-input m5 num" name="sales_forecast_monthly[${index}][m5]" value="0"></td>
         <td><input type="number" step="0.01" class="m-input m6 num" name="sales_forecast_monthly[${index}][m6]" value="0"></td>
-        <td><input type="number" step="0.01" class="m-input m7 num" name="sales_forecast_monthly[${index}][m7_12]" value="0"></td>
+        <td><input type="number" step="0.01" class="m-input m7 num" name="sales_forecast_monthly[${index}][m7]" value="0"></td>
+        <td><input type="number" step="0.01" class="m-input m8 num" name="sales_forecast_monthly[${index}][m8]" value="0"></td>
+        <td><input type="number" step="0.01" class="m-input m9 num" name="sales_forecast_monthly[${index}][m9]" value="0"></td>
+        <td><input type="number" step="0.01" class="m-input m10 num" name="sales_forecast_monthly[${index}][m10]" value="0"></td>
+        <td><input type="number" step="0.01" class="m-input m11 num" name="sales_forecast_monthly[${index}][m11]" value="0"></td>
+        <td><input type="number" step="0.01" class="m-input m12 num" name="sales_forecast_monthly[${index}][m12]" value="0"></td>
         <td class="num row-year-total" style="font-weight:700; background:#f4f6ff;">0.00</td>
         <td style="text-align:center;"><button type="button" class="btn danger remove-row-btn">&times;</button></td>
     `;
@@ -96,6 +124,15 @@ document.addEventListener('click', function(e) {
             calcAll();
         }
     }
+    if (e.target && e.target.classList.contains('remove-swot-btn')) {
+        const row = e.target.closest('.swot-row');
+        const container = row.parentElement;
+        if (container && container.querySelectorAll('.swot-row').length > 1) {
+            row.remove();
+        } else if (row) {
+            row.querySelector('input').value = '';
+        }
+    }
 });
 
 // Auto-calculation functions
@@ -121,29 +158,28 @@ function calcBudget() {
 }
 
 function calcMonthly() {
-    let totM1 = 0, totM2 = 0, totM3 = 0, totM4 = 0, totM5 = 0, totM6 = 0, totM7 = 0, grandTot = 0;
+    let totM = Array(13).fill(0);
+    let grandTot = 0;
 
     document.querySelectorAll('.monthly-row').forEach(row => {
-        let m1 = parseFloat(row.querySelector('.m1')?.value || 0);
-        let m2 = parseFloat(row.querySelector('.m2')?.value || 0);
-        let m3 = parseFloat(row.querySelector('.m3')?.value || 0);
-        let m4 = parseFloat(row.querySelector('.m4')?.value || 0);
-        let m5 = parseFloat(row.querySelector('.m5')?.value || 0);
-        let m6 = parseFloat(row.querySelector('.m6')?.value || 0);
-        let m7 = parseFloat(row.querySelector('.m7')?.value || 0);
-        let rowTot = m1 + m2 + m3 + m4 + m5 + m6 + m7;
+        let rowTot = 0;
+        for (let m = 1; m <= 12; m++) {
+            let val = parseFloat(row.querySelector(`.m${m}`)?.value || 0);
+            rowTot += val;
+            totM[m] += val;
+        }
 
         let rowTotCell = row.querySelector('.row-year-total');
         if (rowTotCell) rowTotCell.textContent = formatNum(rowTot);
 
-        totM1 += m1; totM2 += m2; totM3 += m3; totM4 += m4; totM5 += m5; totM6 += m6; totM7 += m7;
         grandTot += rowTot;
     });
 
     const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = formatNum(val); };
-    set('tot-m1', totM1); set('tot-m2', totM2); set('tot-m3', totM3);
-    set('tot-m4', totM4); set('tot-m5', totM5); set('tot-m6', totM6);
-    set('tot-m7', totM7); set('tot-year', grandTot);
+    for (let m = 1; m <= 12; m++) {
+        set(`tot-m${m}`, totM[m]);
+    }
+    set('tot-year', grandTot);
 }
 
 function calcLongterm() {

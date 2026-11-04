@@ -78,6 +78,17 @@ class MarketingPlanController extends Controller
     {
         $input = $request->except(['_token', '_method']);
 
+        // Process SWOT bullet points into clean text blocks
+        $swotCategories = ['strengths', 'weaknesses', 'opportunities', 'threats'];
+        foreach ($swotCategories as $cat) {
+            $listKey = 'swot_' . $cat . '_list';
+            if ($request->has($listKey)) {
+                $points = array_filter(array_map('trim', (array)$request->input($listKey)));
+                $input['swot_' . $cat] = implode("\n", array_map(fn($p) => '• ' . ltrim($p, '• '), $points));
+                unset($input[$listKey]);
+            }
+        }
+
         // Process array collections and sanitize
         $arrays = [
             'target_customer_profiles',

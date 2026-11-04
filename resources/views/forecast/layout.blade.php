@@ -26,7 +26,7 @@
             z-index: 1000;
         }
         .header-container {
-            max-width: 1280px;
+            max-width: 1440px;
             margin: 0 auto;
             padding: 0 24px;
             height: 68px;
@@ -141,7 +141,7 @@
         }
 
         /* Page Layout & Components */
-        main { max-width: 1240px; margin: 28px auto 80px; padding: 0 24px; }
+        main { max-width: 1440px; margin: 28px auto 80px; padding: 0 24px; }
         h1 { font-size: 22px; margin: 0 0 4px; color: #0f172a; }
         .mute { color: var(--mute); }
         .small { font-size: 13px; }

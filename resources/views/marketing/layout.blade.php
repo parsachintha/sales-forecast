@@ -27,7 +27,7 @@
             z-index: 1000;
         }
         .header-container {
-            max-width: 1280px;
+            max-width: 1440px;
             margin: 0 auto;
             padding: 0 24px;
             height: 68px;
@@ -150,7 +150,7 @@
             color: #ffffff !important;
         }
 
-        main { max-width: 1240px; margin: 28px auto 80px; padding: 0 24px; }
+        main { max-width: 1440px; margin: 28px auto 80px; padding: 0 24px; }
         
         .card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 24px 28px; box-shadow: 0 1px 3px rgba(0,0,0,0.03); margin-bottom: 24px; }
         .section-header { border-bottom: 2px solid var(--brand-soft); padding-bottom: 10px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: baseline; }

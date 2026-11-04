@@ -321,69 +321,60 @@
         <!-- 9.1 Monthly -->
         <div style="margin-bottom: 22px;">
             <strong style="color:#0f172a; font-size:14px;">9.1 Estimated monthly sales revenue for the proposed 1st year (Rs.):</strong>
-            <table class="sedd-table" style="margin-top:8px;">
-                <thead>
-                    <tr>
-                        <th style="width:20%;">Product / Service</th>
-                        <th class="num">1 Month</th>
-                        <th class="num">2 Month</th>
-                        <th class="num">3 Month</th>
-                        <th class="num">4 Month</th>
-                        <th class="num">5 Month</th>
-                        <th class="num">6 Month</th>
-                        <th class="num">7-12 Total</th>
-                        <th class="num" style="background:#e0e7ff;">1 Year Total</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @php
-                        $m_cols = ['m1'=>0, 'm2'=>0, 'm3'=>0, 'm4'=>0, 'm5'=>0, 'm6'=>0, 'm7_12'=>0, 'tot'=>0];
-                    @endphp
-                    @foreach($plan->sales_forecast_monthly ?? [] as $row)
-                        @php
-                            $r_m1 = (float)($row['m1'] ?? 0);
-                            $r_m2 = (float)($row['m2'] ?? 0);
-                            $r_m3 = (float)($row['m3'] ?? 0);
-                            $r_m4 = (float)($row['m4'] ?? 0);
-                            $r_m5 = (float)($row['m5'] ?? 0);
-                            $r_m6 = (float)($row['m6'] ?? 0);
-                            $r_m7_12 = (float)($row['m7_12'] ?? 0);
-                            $r_tot = $r_m1 + $r_m2 + $r_m3 + $r_m4 + $r_m5 + $r_m6 + $r_m7_12;
-
-                            $m_cols['m1'] += $r_m1;
-                            $m_cols['m2'] += $r_m2;
-                            $m_cols['m3'] += $r_m3;
-                            $m_cols['m4'] += $r_m4;
-                            $m_cols['m5'] += $r_m5;
-                            $m_cols['m6'] += $r_m6;
-                            $m_cols['m7_12'] += $r_m7_12;
-                            $m_cols['tot'] += $r_tot;
-                        @endphp
+            <div style="overflow-x:auto;">
+                <table class="sedd-table" style="margin-top:8px; min-width:1150px;">
+                    <thead>
                         <tr>
-                            <td><strong>{{ $row['product_service'] ?? '-' }}</strong></td>
-                            <td class="num">{{ number_format($r_m1, 2) }}</td>
-                            <td class="num">{{ number_format($r_m2, 2) }}</td>
-                            <td class="num">{{ number_format($r_m3, 2) }}</td>
-                            <td class="num">{{ number_format($r_m4, 2) }}</td>
-                            <td class="num">{{ number_format($r_m5, 2) }}</td>
-                            <td class="num">{{ number_format($r_m6, 2) }}</td>
-                            <td class="num">{{ number_format($r_m7_12, 2) }}</td>
-                            <td class="num" style="font-weight:700; background:#f5f7ff;">{{ number_format($r_tot, 2) }}</td>
+                            <th style="min-width:150px;">Product / Service</th>
+                            <th class="num" style="min-width:65px;">1 M</th>
+                            <th class="num" style="min-width:65px;">2 M</th>
+                            <th class="num" style="min-width:65px;">3 M</th>
+                            <th class="num" style="min-width:65px;">4 M</th>
+                            <th class="num" style="min-width:65px;">5 M</th>
+                            <th class="num" style="min-width:65px;">6 M</th>
+                            <th class="num" style="min-width:65px;">7 M</th>
+                            <th class="num" style="min-width:65px;">8 M</th>
+                            <th class="num" style="min-width:65px;">9 M</th>
+                            <th class="num" style="min-width:65px;">10 M</th>
+                            <th class="num" style="min-width:65px;">11 M</th>
+                            <th class="num" style="min-width:65px;">12 M</th>
+                            <th class="num" style="background:#e0e7ff; min-width:110px;">1 Year Total</th>
                         </tr>
-                    @endforeach
-                    <tr class="total-row">
-                        <td>Total Income (Rs.)</td>
-                        <td class="num">{{ number_format($m_cols['m1'], 2) }}</td>
-                        <td class="num">{{ number_format($m_cols['m2'], 2) }}</td>
-                        <td class="num">{{ number_format($m_cols['m3'], 2) }}</td>
-                        <td class="num">{{ number_format($m_cols['m4'], 2) }}</td>
-                        <td class="num">{{ number_format($m_cols['m5'], 2) }}</td>
-                        <td class="num">{{ number_format($m_cols['m6'], 2) }}</td>
-                        <td class="num">{{ number_format($m_cols['m7_12'], 2) }}</td>
-                        <td class="num" style="background:#e0e7ff;">{{ number_format($m_cols['tot'], 2) }}</td>
-                    </tr>
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        @php
+                            $m_cols = array_fill(1, 12, 0);
+                            $grand_total = 0;
+                        @endphp
+                        @foreach($plan->sales_forecast_monthly ?? [] as $row)
+                            @php
+                                $legacyHalf = isset($row['m7_12']) ? (float)$row['m7_12'] / 6 : 0;
+                                $row_sum = 0;
+                            @endphp
+                            <tr>
+                                <td><strong>{{ $row['product_service'] ?? '-' }}</strong></td>
+                                @for($m = 1; $m <= 12; $m++)
+                                    @php
+                                        $val = isset($row['m'.$m]) ? (float)$row['m'.$m] : ($m >= 7 ? $legacyHalf : 0);
+                                        $row_sum += $val;
+                                        $m_cols[$m] += $val;
+                                    @endphp
+                                    <td class="num">{{ number_format($val, 2) }}</td>
+                                @endfor
+                                @php $grand_total += $row_sum; @endphp
+                                <td class="num" style="font-weight:700; background:#f5f7ff;">{{ number_format($row_sum, 2) }}</td>
+                            </tr>
+                        @endforeach
+                        <tr class="total-row">
+                            <td>Total Income (Rs.)</td>
+                            @for($m = 1; $m <= 12; $m++)
+                                <td class="num">{{ number_format($m_cols[$m], 2) }}</td>
+                            @endfor
+                            <td class="num" style="background:#e0e7ff;">{{ number_format($grand_total, 2) }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
 
         <!-- 9.2 Long-term -->

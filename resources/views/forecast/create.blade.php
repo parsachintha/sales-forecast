@@ -39,7 +39,17 @@
                     <input type="number" name="year" id="companyYear" value="{{ old('year', 2027) }}" min="2020" max="2100" required>
                 </div>
                 <div>
-                    <label style="font-weight:600; font-size:13px; display:block; margin-bottom:5px;">SEDD Marketing Plan Reference</label>
+                    <label style="font-weight:700; font-size:13px; display:block; margin-bottom:5px; color:#1e40af;">
+                        🏢 Total Company Annual Goal (LKR)
+                    </label>
+                    <div style="display:flex; gap:6px;">
+                        <input type="number" id="companyTotalAnnualInput" value="400000" min="0" step="1" style="font-weight:700; font-size:15px; border-color:#2563eb; background:#f0f7ff;" placeholder="e.g. 400000">
+                        <button type="button" class="btn" style="padding:6px 12px; font-size:12px; white-space:nowrap;" onclick="applyTotalCompanyGoal()" title="Distribute this total equally across products">Split Across Products</button>
+                    </div>
+                    <span style="font-size:11px; color:var(--mute);">You can enter company target here or set it product-wise below.</span>
+                </div>
+                <div>
+                    <label style="font-weight:600; font-size:13px; display:block; margin-bottom:5px;">Import from SEDD Marketing Plan</label>
                     <select name="marketing_plan_id" id="planSelect" onchange="loadPlanData(this.value)">
                         <option value="">-- Manual Entry or Select Plan --</option>
                         @foreach($marketingPlans as $mp)
@@ -219,17 +229,15 @@ function loadPlanData(planId) {
     if (items && items.length > 0) {
         products = [];
         items.forEach(item => {
-            let m1 = parseFloat(item.m1 || 0);
-            let m2 = parseFloat(item.m2 || 0);
-            let m3 = parseFloat(item.m3 || 0);
-            let m4 = parseFloat(item.m4 || 0);
-            let m5 = parseFloat(item.m5 || 0);
-            let m6 = parseFloat(item.m6 || 0);
-            let m7_12 = parseFloat(item.m7_12 || 0);
-            let evenHalf = m7_12 > 0 ? (m7_12 / 6) : 0;
+            let mArr = [0];
+            let annual = 0;
+            let legacyHalf = item.m7_12 ? (parseFloat(item.m7_12) / 6) : 0;
 
-            let mArr = [0, m1, m2, m3, m4, m5, m6, evenHalf, evenHalf, evenHalf, evenHalf, evenHalf, evenHalf];
-            let annual = m1 + m2 + m3 + m4 + m5 + m6 + m7_12;
+            for (let m = 1; m <= 12; m++) {
+                let val = item['m' + m] !== undefined ? parseFloat(item['m' + m] || 0) : (m >= 7 ? legacyHalf : 0);
+                mArr.push(val);
+                annual += val;
+            }
 
             products.push({
                 name: item.product_service || 'Product',
@@ -247,9 +255,6 @@ function addProductBlock() {
         annual_target: 120000,
         months: Array(13).fill(0)
     });
-    // Auto divide 120000 across 12 months
-    const last = products[products.length - 1];
-    divideProductEvenly(products.length - 1);
     renderProductBlocks();
 }
 
@@ -276,7 +281,29 @@ function divideProductEvenly(pIdx) {
 
 function onAnnualChange(pIdx, val) {
     products[pIdx].annual_target = parseFloat(val) || 0;
-    divideProductEvenly(pIdx);
+    updateSingleProductRemaining(pIdx);
+    updateCalculations();
+}
+
+function applyTotalCompanyGoal() {
+    const input = document.getElementById('companyTotalAnnualInput');
+    const total = parseFloat(input.value) || 0;
+    if (total <= 0) {
+        alert("Please enter a valid company annual target greater than 0.");
+        return;
+    }
+    if (products.length === 0) {
+        addProductBlock();
+    }
+    const share = Math.floor(total / products.length);
+    const remainder = total - (share * products.length);
+
+    products.forEach((p, idx) => {
+        p.annual_target = share + (idx < remainder ? 1 : 0);
+        divideProductEvenly(idx);
+    });
+
+    renderProductBlocks();
 }
 
 function onMonthChange(pIdx, month, val) {
@@ -392,19 +419,26 @@ function renderProductBlocks() {
             </div>
 
             <!-- Remaining Notification Banner -->
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; padding:6px 12px; border-radius:6px; font-size:12.5px; border:1px solid #cbd5e1;" id="remaining-badge-${pIdx}">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; padding:8px 14px; border-radius:6px; font-size:13px; font-weight:600; border:1px solid #cbd5e1;" id="remaining-badge-${pIdx}">
                 <!-- filled by updateSingleProductRemaining -->
             </div>
             <div style="margin-bottom:10px;">
-                <button type="button" id="divide-remainder-btn-${pIdx}" class="btn" style="background:#d97706; border-color:#b45309; font-size:12px; padding:4px 10px; display:none;" onclick="divideRemainder(${pIdx})"></button>
+                <button type="button" id="divide-remainder-btn-${pIdx}" class="btn" style="background:#d97706; border-color:#b45309; font-size:12px; padding:5px 12px; display:none;" onclick="divideRemainder(${pIdx})"></button>
             </div>
 
             <!-- Month 1 to 12 Inputs -->
             <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(88px, 1fr)); gap:6px;">
-                ${[1,2,3,4,5,6,7,8,9,10,11,12].map(m => `
+                @php
+                    $monthNames = [1=>'Jan', 2=>'Feb', 3=>'Mar', 4=>'Apr', 5=>'May', 6=>'Jun', 7=>'Jul', 8=>'Aug', 9=>'Sep', 10=>'Oct', 11=>'Nov', 12=>'Dec'];
+                @endphp
+                ${[
+                    {m:1, name:'Jan'}, {m:2, name:'Feb'}, {m:3, name:'Mar'}, {m:4, name:'Apr'},
+                    {m:5, name:'May'}, {m:6, name:'Jun'}, {m:7, name:'Jul'}, {m:8, name:'Aug'},
+                    {m:9, name:'Sep'}, {m:10, name:'Oct'}, {m:11, name:'Nov'}, {m:12, name:'Dec'}
+                ].map(item => `
                     <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:6px 4px; text-align:center;">
-                        <span style="font-size:11px; font-weight:700; color:#64748b; display:block;">M${m}</span>
-                        <input type="number" step="1" min="0" name="products[${pIdx}][months][${m}]" value="${p.months[m] || 0}" style="padding:3px 4px; font-size:12px; text-align:right; font-weight:600;" oninput="onMonthChange(${pIdx}, ${m}, this.value)">
+                        <span style="font-size:11px; font-weight:700; color:#475569; display:block;">${item.name} (M${item.m})</span>
+                        <input type="number" step="1" min="0" name="products[${pIdx}][months][${item.m}]" value="${p.months[item.m] || 0}" style="padding:4px 4px; font-size:12.5px; text-align:right; font-weight:600;" oninput="onMonthChange(${pIdx}, ${item.m}, this.value)">
                     </div>
                 `).join('')}
             </div>
@@ -435,6 +469,11 @@ function updateCalculations() {
 
     let avgMonthly = totalAnnual / 12;
     let perRepMonthly = repCount > 0 ? (avgMonthly / repCount) : 0;
+
+    const companyTotalInput = document.getElementById('companyTotalAnnualInput');
+    if (companyTotalInput && document.activeElement !== companyTotalInput) {
+        companyTotalInput.value = Math.round(totalAnnual);
+    }
 
     document.getElementById('summaryTotalAnnual').textContent = `Rs. ${formatNum(totalAnnual)}`;
     document.getElementById('summaryMonthlyAvg').textContent = `Rs. ${formatNum(avgMonthly)} / mo`;
@@ -474,9 +513,6 @@ function updateCalculations() {
 
 // Initial setup
 document.addEventListener('DOMContentLoaded', function() {
-    // Start with 2 products split evenly
-    divideProductEvenly(0);
-    divideProductEvenly(1);
     renderProductBlocks();
 
     // If preselected plan was passed, load it

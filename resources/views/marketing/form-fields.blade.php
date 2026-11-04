@@ -233,21 +233,92 @@
         <h2 class="section-title"><span class="sec-num">6</span> SWOT Analysis</h2>
     </div>
     <div class="form-grid" style="grid-template-columns: 1fr 1fr;">
-        <div class="form-group" style="background:#f0fdf4; padding:12px; border-radius:8px; border:1px solid #bbf7d0;">
-            <label style="color:#166534;">Strengths (Strengths) - Internal</label>
-            <textarea name="swot_strengths" rows="4" placeholder="• Experienced team&#10;• Certified organic quality&#10;• Low cost local production">{{ old('swot_strengths', $plan->swot_strengths) }}</textarea>
+        <!-- Strengths -->
+        <div style="background:#f0fdf4; padding:14px; border-radius:8px; border:1px solid #bbf7d0;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                <label style="color:#166534; font-weight:700; font-size:13.5px;">Strengths (Strengths) - Internal</label>
+                <button type="button" class="btn" style="padding:2px 8px; font-size:12px; background:#16a34a; border-color:#15803d;" onclick="addSwotPoint('strengths')" title="Add point">+</button>
+            </div>
+            <div id="swot-strengths-container" style="display:flex; flex-direction:column; gap:6px;">
+                @php
+                    $strengthsPoints = old('swot_strengths_list', isset($plan->swot_strengths) ? array_filter(array_map('trim', explode("\n", $plan->swot_strengths))) : ['Experienced team', 'Certified organic quality', 'Low cost local production']);
+                    if (empty($strengthsPoints)) $strengthsPoints = [''];
+                @endphp
+                @foreach($strengthsPoints as $point)
+                    <div class="swot-row" style="display:flex; gap:6px; align-items:center;">
+                        <span style="color:#16a34a; font-weight:700;">•</span>
+                        <input type="text" name="swot_strengths_list[]" value="{{ ltrim($point, '• ') }}" placeholder="Enter strength..." style="flex:1;">
+                        <button type="button" class="btn danger remove-swot-btn" style="padding:2px 6px; font-size:11px;">&times;</button>
+                    </div>
+                @endforeach
+            </div>
+            <button type="button" class="btn add-row" style="margin-top:8px; border-color:#16a34a; color:#16a34a !important;" onclick="addSwotPoint('strengths')">+ Add Strength Point</button>
         </div>
-        <div class="form-group" style="background:#fef2f2; padding:12px; border-radius:8px; border:1px solid #fecaca;">
-            <label style="color:#991b1b;">Weaknesses (Weaknesses) - Internal</label>
-            <textarea name="swot_weaknesses" rows="4" placeholder="• Limited automated machinery&#10;• Restricted initial marketing budget">{{ old('swot_weaknesses', $plan->swot_weaknesses) }}</textarea>
+
+        <!-- Weaknesses -->
+        <div style="background:#fef2f2; padding:14px; border-radius:8px; border:1px solid #fecaca;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                <label style="color:#991b1b; font-weight:700; font-size:13.5px;">Weaknesses (Weaknesses) - Internal</label>
+                <button type="button" class="btn" style="padding:2px 8px; font-size:12px; background:#dc2626; border-color:#b91c1c;" onclick="addSwotPoint('weaknesses')" title="Add point">+</button>
+            </div>
+            <div id="swot-weaknesses-container" style="display:flex; flex-direction:column; gap:6px;">
+                @php
+                    $weaknessesPoints = old('swot_weaknesses_list', isset($plan->swot_weaknesses) ? array_filter(array_map('trim', explode("\n", $plan->swot_weaknesses))) : ['Limited automated machinery', 'Restricted initial marketing budget']);
+                    if (empty($weaknessesPoints)) $weaknessesPoints = [''];
+                @endphp
+                @foreach($weaknessesPoints as $point)
+                    <div class="swot-row" style="display:flex; gap:6px; align-items:center;">
+                        <span style="color:#dc2626; font-weight:700;">•</span>
+                        <input type="text" name="swot_weaknesses_list[]" value="{{ ltrim($point, '• ') }}" placeholder="Enter weakness..." style="flex:1;">
+                        <button type="button" class="btn danger remove-swot-btn" style="padding:2px 6px; font-size:11px;">&times;</button>
+                    </div>
+                @endforeach
+            </div>
+            <button type="button" class="btn add-row" style="margin-top:8px; border-color:#dc2626; color:#dc2626 !important;" onclick="addSwotPoint('weaknesses')">+ Add Weakness Point</button>
         </div>
-        <div class="form-group" style="background:#eff6ff; padding:12px; border-radius:8px; border:1px solid #bfdbfe;">
-            <label style="color:#1e40af;">Opportunities (Opportunities) - External</label>
-            <textarea name="swot_opportunities" rows="4" placeholder="• Growing tourist demand&#10;• Government export subsidies via SEDD">{{ old('swot_opportunities', $plan->swot_opportunities) }}</textarea>
+
+        <!-- Opportunities -->
+        <div style="background:#eff6ff; padding:14px; border-radius:8px; border:1px solid #bfdbfe;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                <label style="color:#1e40af; font-weight:700; font-size:13.5px;">Opportunities (Opportunities) - External</label>
+                <button type="button" class="btn" style="padding:2px 8px; font-size:12px; background:#2563eb; border-color:#1d4ed8;" onclick="addSwotPoint('opportunities')" title="Add point">+</button>
+            </div>
+            <div id="swot-opportunities-container" style="display:flex; flex-direction:column; gap:6px;">
+                @php
+                    $opportunitiesPoints = old('swot_opportunities_list', isset($plan->swot_opportunities) ? array_filter(array_map('trim', explode("\n", $plan->swot_opportunities))) : ['Growing tourist demand', 'Government export subsidies via SEDD']);
+                    if (empty($opportunitiesPoints)) $opportunitiesPoints = [''];
+                @endphp
+                @foreach($opportunitiesPoints as $point)
+                    <div class="swot-row" style="display:flex; gap:6px; align-items:center;">
+                        <span style="color:#2563eb; font-weight:700;">•</span>
+                        <input type="text" name="swot_opportunities_list[]" value="{{ ltrim($point, '• ') }}" placeholder="Enter opportunity..." style="flex:1;">
+                        <button type="button" class="btn danger remove-swot-btn" style="padding:2px 6px; font-size:11px;">&times;</button>
+                    </div>
+                @endforeach
+            </div>
+            <button type="button" class="btn add-row" style="margin-top:8px; border-color:#2563eb; color:#2563eb !important;" onclick="addSwotPoint('opportunities')">+ Add Opportunity Point</button>
         </div>
-        <div class="form-group" style="background:#fffbeb; padding:12px; border-radius:8px; border:1px solid #fde68a;">
-            <label style="color:#92400e;">Threats (Threats) - External</label>
-            <textarea name="swot_threats" rows="4" placeholder="• Raw material price inflation&#10;• Cheap imported substitutes">{{ old('swot_threats', $plan->swot_threats) }}</textarea>
+
+        <!-- Threats -->
+        <div style="background:#fffbeb; padding:14px; border-radius:8px; border:1px solid #fde68a;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                <label style="color:#92400e; font-weight:700; font-size:13.5px;">Threats (Threats) - External</label>
+                <button type="button" class="btn" style="padding:2px 8px; font-size:12px; background:#d97706; border-color:#b45309;" onclick="addSwotPoint('threats')" title="Add point">+</button>
+            </div>
+            <div id="swot-threats-container" style="display:flex; flex-direction:column; gap:6px;">
+                @php
+                    $threatsPoints = old('swot_threats_list', isset($plan->swot_threats) ? array_filter(array_map('trim', explode("\n", $plan->swot_threats))) : ['Raw material price inflation', 'Cheap imported substitutes']);
+                    if (empty($threatsPoints)) $threatsPoints = [''];
+                @endphp
+                @foreach($threatsPoints as $point)
+                    <div class="swot-row" style="display:flex; gap:6px; align-items:center;">
+                        <span style="color:#d97706; font-weight:700;">•</span>
+                        <input type="text" name="swot_threats_list[]" value="{{ ltrim($point, '• ') }}" placeholder="Enter threat..." style="flex:1;">
+                        <button type="button" class="btn danger remove-swot-btn" style="padding:2px 6px; font-size:11px;">&times;</button>
+                    </div>
+                @endforeach
+            </div>
+            <button type="button" class="btn add-row" style="margin-top:8px; border-color:#d97706; color:#d97706 !important;" onclick="addSwotPoint('threats')">+ Add Threat Point</button>
         </div>
     </div>
 </div>
@@ -329,26 +400,41 @@
     <!-- 9.1 Monthly Forecast for 1st Year -->
     <div style="margin-bottom: 24px;">
         <label style="font-weight:700; font-size:14px; color:#1e3a8a;">9.1 Estimated monthly sales revenue for the proposed 1st year (Rs.)</label>
-        <p style="font-size:12px; color:var(--mute); margin:2px 0 8px;">Breakdown of Month 1 through Month 6, and the remaining 7-12 months total.</p>
+        <p style="font-size:12px; color:var(--mute); margin:2px 0 8px;">Breakdown of all 12 individual months (Month 1 through Month 12) with full annual total.</p>
 
         <div style="overflow-x:auto;">
-            <table class="sedd-table" id="forecast-monthly-table">
+            <table class="sedd-table" id="forecast-monthly-table" style="min-width:1150px;">
                 <thead>
                     <tr>
-                        <th style="min-width:160px;">Product / Service</th>
-                        <th class="num">1 Month</th>
-                        <th class="num">2 Month</th>
-                        <th class="num">3 Month</th>
-                        <th class="num">4 Month</th>
-                        <th class="num">5 Month</th>
-                        <th class="num">6 Month</th>
-                        <th class="num">7-12 Total</th>
+                        <th style="min-width:150px;">Product / Service</th>
+                        <th class="num" style="min-width:70px;">1 M</th>
+                        <th class="num" style="min-width:70px;">2 M</th>
+                        <th class="num" style="min-width:70px;">3 M</th>
+                        <th class="num" style="min-width:70px;">4 M</th>
+                        <th class="num" style="min-width:70px;">5 M</th>
+                        <th class="num" style="min-width:70px;">6 M</th>
+                        <th class="num" style="min-width:70px;">7 M</th>
+                        <th class="num" style="min-width:70px;">8 M</th>
+                        <th class="num" style="min-width:70px;">9 M</th>
+                        <th class="num" style="min-width:70px;">10 M</th>
+                        <th class="num" style="min-width:70px;">11 M</th>
+                        <th class="num" style="min-width:70px;">12 M</th>
                         <th class="num" style="background:#e0e7ff; min-width:110px;">1 Year Total</th>
                         <th style="width:30px;"></th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach(old('sales_forecast_monthly', $plan->sales_forecast_monthly ?? \App\Models\MarketingPlan::defaultMonthlyForecast()) as $idx => $m)
+                        @php
+                            // Handle legacy m7_12 data gracefully if present
+                            $legacyHalf = isset($m['m7_12']) ? (float)$m['m7_12'] / 6 : 0;
+                            $m7 = isset($m['m7']) ? (float)$m['m7'] : $legacyHalf;
+                            $m8 = isset($m['m8']) ? (float)$m['m8'] : $legacyHalf;
+                            $m9 = isset($m['m9']) ? (float)$m['m9'] : $legacyHalf;
+                            $m10 = isset($m['m10']) ? (float)$m['m10'] : $legacyHalf;
+                            $m11 = isset($m['m11']) ? (float)$m['m11'] : $legacyHalf;
+                            $m12 = isset($m['m12']) ? (float)$m['m12'] : $legacyHalf;
+                        @endphp
                         <tr class="monthly-row">
                             <td><input type="text" name="sales_forecast_monthly[{{ $idx }}][product_service]" value="{{ $m['product_service'] ?? '' }}" placeholder="e.g. Production A"></td>
                             <td><input type="number" step="0.01" class="m-input m1 num" name="sales_forecast_monthly[{{ $idx }}][m1]" value="{{ $m['m1'] ?? 0 }}"></td>
@@ -357,7 +443,12 @@
                             <td><input type="number" step="0.01" class="m-input m4 num" name="sales_forecast_monthly[{{ $idx }}][m4]" value="{{ $m['m4'] ?? 0 }}"></td>
                             <td><input type="number" step="0.01" class="m-input m5 num" name="sales_forecast_monthly[{{ $idx }}][m5]" value="{{ $m['m5'] ?? 0 }}"></td>
                             <td><input type="number" step="0.01" class="m-input m6 num" name="sales_forecast_monthly[{{ $idx }}][m6]" value="{{ $m['m6'] ?? 0 }}"></td>
-                            <td><input type="number" step="0.01" class="m-input m7 num" name="sales_forecast_monthly[{{ $idx }}][m7_12]" value="{{ $m['m7_12'] ?? 0 }}"></td>
+                            <td><input type="number" step="0.01" class="m-input m7 num" name="sales_forecast_monthly[{{ $idx }}][m7]" value="{{ $m7 }}"></td>
+                            <td><input type="number" step="0.01" class="m-input m8 num" name="sales_forecast_monthly[{{ $idx }}][m8]" value="{{ $m8 }}"></td>
+                            <td><input type="number" step="0.01" class="m-input m9 num" name="sales_forecast_monthly[{{ $idx }}][m9]" value="{{ $m9 }}"></td>
+                            <td><input type="number" step="0.01" class="m-input m10 num" name="sales_forecast_monthly[{{ $idx }}][m10]" value="{{ $m10 }}"></td>
+                            <td><input type="number" step="0.01" class="m-input m11 num" name="sales_forecast_monthly[{{ $idx }}][m11]" value="{{ $m11 }}"></td>
+                            <td><input type="number" step="0.01" class="m-input m12 num" name="sales_forecast_monthly[{{ $idx }}][m12]" value="{{ $m12 }}"></td>
                             <td class="num row-year-total" style="font-weight:700; background:#f4f6ff;">0.00</td>
                             <td style="text-align:center;"><button type="button" class="btn danger remove-row-btn">&times;</button></td>
                         </tr>
@@ -371,6 +462,11 @@
                         <td class="num" id="tot-m5">0.00</td>
                         <td class="num" id="tot-m6">0.00</td>
                         <td class="num" id="tot-m7">0.00</td>
+                        <td class="num" id="tot-m8">0.00</td>
+                        <td class="num" id="tot-m9">0.00</td>
+                        <td class="num" id="tot-m10">0.00</td>
+                        <td class="num" id="tot-m11">0.00</td>
+                        <td class="num" id="tot-m12">0.00</td>
                         <td class="num" id="tot-year" style="background:#e0e7ff;">0.00</td>
                         <td></td>
                     </tr>

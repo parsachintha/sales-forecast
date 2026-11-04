@@ -52,8 +52,8 @@ class MarketingPlan extends Model
     public static function defaultMonthlyForecast(): array
     {
         return [
-            ['product_service' => 'Production A', 'm1' => 0, 'm2' => 0, 'm3' => 0, 'm4' => 0, 'm5' => 0, 'm6' => 0, 'm7_12' => 0, 'total' => 0],
-            ['product_service' => 'Production B', 'm1' => 0, 'm2' => 0, 'm3' => 0, 'm4' => 0, 'm5' => 0, 'm6' => 0, 'm7_12' => 0, 'total' => 0],
+            ['product_service' => 'Production A', 'm1' => 0, 'm2' => 0, 'm3' => 0, 'm4' => 0, 'm5' => 0, 'm6' => 0, 'm7' => 0, 'm8' => 0, 'm9' => 0, 'm10' => 0, 'm11' => 0, 'm12' => 0, 'total' => 0],
+            ['product_service' => 'Production B', 'm1' => 0, 'm2' => 0, 'm3' => 0, 'm4' => 0, 'm5' => 0, 'm6' => 0, 'm7' => 0, 'm8' => 0, 'm9' => 0, 'm10' => 0, 'm11' => 0, 'm12' => 0, 'total' => 0],
         ];
     }
 
