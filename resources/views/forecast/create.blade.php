@@ -82,7 +82,7 @@
         <div class="card" style="margin-bottom:20px;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
                 <div>
-                    <h3 style="margin:0 0 4px; font-size:16px; color:#1e3a8a;">2. Product/Service Annual & Monthly Breakdown (Section 9.1 Reference)</h3>
+                    <h3 style="margin:0 0 4px; font-size:16px; color:#1e3a8a;">2. Product/Service Annual & Monthly Breakdown</h3>
                     <div style="color:var(--mute); font-size:13px;">
                         Set annual target for each product. When you allocate amounts to specific months, the remaining unallocated balance is shown in real-time.
                     </div>
@@ -279,6 +279,14 @@ function divideProductEvenly(pIdx) {
     renderProductBlocks();
 }
 
+function clearProductMonths(pIdx) {
+    const p = products[pIdx];
+    for (let m = 1; m <= 12; m++) {
+        p.months[m] = 0;
+    }
+    renderProductBlocks();
+}
+
 function onAnnualChange(pIdx, val) {
     products[pIdx].annual_target = parseFloat(val) || 0;
     updateSingleProductRemaining(pIdx);
@@ -414,6 +422,7 @@ function renderProductBlocks() {
                         <input type="number" name="products[${pIdx}][annual_target]" value="${annual}" min="0" step="1" style="width:140px; font-weight:700; text-align:right;" oninput="onAnnualChange(${pIdx}, this.value)" required>
                     </div>
                     <button type="button" class="btn ghost" style="padding:4px 8px; font-size:12px;" onclick="divideProductEvenly(${pIdx})" title="Auto-divide annual goal into 12 equal months">➗ Split 12 Equal</button>
+                    <button type="button" class="btn ghost" style="padding:4px 8px; font-size:12px; color:#dc2626; border-color:#fca5a5;" onclick="clearProductMonths(${pIdx})" title="Clear all monthly values to type your own">✖ Clear Months</button>
                     <button type="button" class="btn danger" style="padding:4px 8px;" onclick="removeProduct(${pIdx})" title="Delete this product">&times;</button>
                 </div>
             </div>
@@ -437,7 +446,7 @@ function renderProductBlocks() {
                     {m:9, name:'Sep'}, {m:10, name:'Oct'}, {m:11, name:'Nov'}, {m:12, name:'Dec'}
                 ].map(item => `
                     <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:6px 4px; text-align:center;">
-                        <span style="font-size:11px; font-weight:700; color:#475569; display:block;">${item.name} (M${item.m})</span>
+                        <span style="font-size:12px; font-weight:700; color:#334155; display:block; margin-bottom:2px;">${item.name}</span>
                         <input type="number" step="1" min="0" name="products[${pIdx}][months][${item.m}]" value="${p.months[item.m] || 0}" style="padding:4px 4px; font-size:12.5px; text-align:right; font-weight:600;" oninput="onMonthChange(${pIdx}, ${item.m}, this.value)">
                     </div>
                 `).join('')}
