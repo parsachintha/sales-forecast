@@ -231,6 +231,20 @@
                     <span class="icon">+</span>
                     <span>New Marketing Plan</span>
                 </a>
+
+                @auth
+                    <div style="display:flex; align-items:center; gap:10px; margin-left:8px; border-left:1px solid #cbd5e1; padding-left:12px;">
+                        <span style="font-size:13px; font-weight:600; color:#334155;">👤 {{ Auth::user()->name }}</span>
+                        <form method="POST" action="{{ route('logout') }}" style="margin:0;">
+                            @csrf
+                            <button type="submit" class="btn ghost" style="padding:4px 10px; font-size:12px; color:#dc2626; border-color:#fca5a5;">Sign Out</button>
+                        </form>
+                    </div>
+                @else
+                    <div style="margin-left:8px; border-left:1px solid #cbd5e1; padding-left:12px;">
+                        <a href="{{ route('login') }}" class="btn ghost" style="padding:6px 14px; font-size:13px;">Sign In</a>
+                    </div>
+                @endauth
             </div>
         </div>
     </header>

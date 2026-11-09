@@ -93,7 +93,7 @@ class SalesGoalController extends Controller
         $request->validate([
             'company_title' => ['required', 'string', 'max:150'],
             'year'          => ['required', 'integer', 'min:2020', 'max:2100'],
-            'rep_ids'       => ['required', 'array', 'min:1'],
+            'rep_ids'       => ['nullable', 'array'],
             'rep_ids.*'     => ['exists:reps,id'],
             'products'      => ['required', 'array', 'min:1'],
             'products.*.name' => ['required', 'string'],
@@ -131,17 +131,14 @@ class SalesGoalController extends Controller
             ];
         }
 
-        // Divide the monthly company totals across reps
-        // Each rep gets their share for Month 1..12
+        // Divide the monthly company totals across reps IF reps are selected
         $repMonthlyShare = [];
-        $repAnnualTarget = 0;
-
-        for ($m = 1; $m <= 12; $m++) {
-            $monthTotal = $monthlyCompanyTotals[$m];
-            // Split monthly total evenly among the reps in whole rupees
-            $split = TargetMath::evenSplit((int) round($monthTotal), $repCount);
-            // $split has an entry for each rep index 0..($repCount-1)
-            $repMonthlyShare[$m] = $split;
+        if ($repCount > 0) {
+            for ($m = 1; $m <= 12; $m++) {
+                $monthTotal = $monthlyCompanyTotals[$m];
+                $split = TargetMath::evenSplit((int) round($monthTotal), $repCount);
+                $repMonthlyShare[$m] = $split;
+            }
         }
 
         DB::transaction(function () use ($repIds, $repCount, $year, $companyTitle, $totalCompanyTarget, $processedProducts, $repMonthlyShare, $marketingPlanId) {
@@ -155,38 +152,42 @@ class SalesGoalController extends Controller
                 'assigned_rep_ids' => $repIds,
             ]);
 
-            // 2. Assign / Update SalesGoal for each selected rep
-            foreach ($repIds as $idx => $repId) {
-                // Calculate rep's annual sum from their monthly shares
-                $thisRepAnnual = 0;
-                $thisRepMonths = [];
+            // 2. Assign / Update SalesGoal for each selected rep (if any selected)
+            if ($repCount > 0) {
+                foreach ($repIds as $idx => $repId) {
+                    $thisRepAnnual = 0;
+                    $thisRepMonths = [];
 
-                for ($m = 1; $m <= 12; $m++) {
-                    $amount = $repMonthlyShare[$m][$idx] ?? 0;
-                    $thisRepMonths[$m] = $amount;
-                    $thisRepAnnual += $amount;
-                }
+                    for ($m = 1; $m <= 12; $m++) {
+                        $amount = $repMonthlyShare[$m][$idx] ?? 0;
+                        $thisRepMonths[$m] = $amount;
+                        $thisRepAnnual += $amount;
+                    }
 
-                $salesGoal = SalesGoal::updateOrCreate(
-                    ['rep_id' => $repId, 'year' => $year],
-                    [
-                        'title' => $companyTitle . ' (Rep Target)',
-                        'target_amount' => $thisRepAnnual,
-                        'baseline_amount' => 0,
-                    ]
-                );
-
-                // Populate / update 12 months for this rep
-                foreach ($thisRepMonths as $month => $amount) {
-                    $salesGoal->months()->updateOrCreate(
-                        ['month' => $month],
-                        ['target_amount' => $amount, 'is_fixed' => true]
+                    $salesGoal = SalesGoal::updateOrCreate(
+                        ['rep_id' => $repId, 'year' => $year],
+                        [
+                            'title' => $companyTitle . ' (Rep Target)',
+                            'target_amount' => $thisRepAnnual,
+                            'baseline_amount' => 0,
+                        ]
                     );
+
+                    foreach ($thisRepMonths as $month => $amount) {
+                        $salesGoal->months()->updateOrCreate(
+                            ['month' => $month],
+                            ['target_amount' => $amount, 'is_fixed' => true]
+                        );
+                    }
                 }
             }
         });
 
-        return redirect()->route('forecast.index')->with('status', "Company goal successfully established! Targets cascaded across {$repCount} sales reps.");
+        $msg = $repCount > 0
+            ? "Company goal successfully established! Targets cascaded across {$repCount} sales reps."
+            : "Company Master Goal successfully saved! (No individual reps assigned).";
+
+        return redirect()->route('forecast.index')->with('status', $msg);
     }
 
     /** The 12-month forecast grid for one goal. */

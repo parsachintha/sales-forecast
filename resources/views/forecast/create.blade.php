@@ -63,10 +63,16 @@
 
             <!-- Rep Selection -->
             <div style="margin-top:16px; border-top:1px solid #e2e8f0; padding-top:14px;">
-                <label style="font-weight:600; font-size:13px; display:block; margin-bottom:8px;">
-                    Select Sales Reps to divide the targets among:
-                    <span style="font-weight:normal; color:var(--mute); font-size:12px;">(<span id="selectedRepCount">{{ count($reps) }}</span> selected)</span>
-                </label>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; flex-wrap:wrap; gap:8px;">
+                    <label style="font-weight:600; font-size:13px; margin:0;">
+                        Assign / Divide targets to Sales Reps (Optional):
+                        <span style="font-weight:normal; color:var(--mute); font-size:12px;">(<span id="selectedRepCount">{{ count($reps) }}</span> selected)</span>
+                    </label>
+                    <div style="display:flex; gap:8px;">
+                        <button type="button" class="btn ghost" style="padding:2px 8px; font-size:11.5px;" onclick="toggleAllReps(true)">Select All</button>
+                        <button type="button" class="btn ghost" style="padding:2px 8px; font-size:11.5px; color:#dc2626; border-color:#fca5a5;" onclick="toggleAllReps(false)">Clear All (Company Goal Only)</button>
+                    </div>
+                </div>
                 <div style="display:flex; flex-wrap:wrap; gap:12px;">
                     @foreach($reps as $rep)
                         <label style="display:inline-flex; align-items:center; gap:6px; background:#f8fafc; border:1px solid #cbd5e1; padding:6px 12px; border-radius:6px; cursor:pointer; font-size:13px;">
@@ -75,6 +81,9 @@
                         </label>
                     @endforeach
                 </div>
+                {{-- <div style="font-size:12px; color:var(--mute); margin-top:6px;">
+                    💡 <em>Tip: Uncheck all reps if you only want to set the master company product goal without assigning individual quotas yet.</em>
+                </div> --}}
             </div>
         </div>
 
@@ -83,9 +92,7 @@
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
                 <div>
                     <h3 style="margin:0 0 4px; font-size:16px; color:#1e3a8a;">2. Product/Service Annual & Monthly Breakdown</h3>
-                    <div style="color:var(--mute); font-size:13px;">
-                        Set annual target for each product. When you allocate amounts to specific months, the remaining unallocated balance is shown in real-time.
-                    </div>
+                 
                 </div>
                 <button type="button" class="btn add-row" onclick="addProductBlock()">+ Add Another Product</button>
             </div>
@@ -217,6 +224,13 @@ function switchMode(mode) {
         document.getElementById('tabCompanyBtn').className = 'btn ghost';
         document.getElementById('tabSingleBtn').className = 'btn';
     }
+}
+
+function toggleAllReps(status) {
+    document.querySelectorAll('.rep-checkbox').forEach(cb => {
+        cb.checked = status;
+    });
+    updateCalculations();
 }
 
 function formatNum(val) {
@@ -492,12 +506,22 @@ function updateCalculations() {
     const tbody = document.getElementById('repPreviewTbody');
     tbody.innerHTML = '';
 
+    const submitBtn = document.getElementById('submitCompanyBtn');
+
     if (repCount === 0) {
-        tbody.innerHTML = `<tr><td colspan="14" style="text-align:center; color:#dc2626; padding:16px;">⚠️ Please select at least one sales rep above.</td></tr>`;
-        document.getElementById('submitCompanyBtn').disabled = true;
+        tbody.innerHTML = `<tr><td colspan="14" style="text-align:center; color:#475569; padding:20px; background:#f8fafc;">
+            ℹ️ <strong>No sales reps selected.</strong> The goal will be saved as a <strong>Company Master Goal</strong> with product & monthly breakdown, without assigning quotas to reps.
+        </td></tr>`;
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '💾 Save Company Master Goal (No Reps)';
+        submitBtn.style.background = '#2563eb';
+        submitBtn.style.borderColor = '#1d4ed8';
         return;
     } else {
-        document.getElementById('submitCompanyBtn').disabled = false;
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '🚀 Create & Cascade Goals to Reps';
+        submitBtn.style.background = '#16a34a';
+        submitBtn.style.borderColor = '#15803d';
     }
 
     repCheckboxes.forEach(cb => {
