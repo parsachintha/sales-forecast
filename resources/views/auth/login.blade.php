@@ -190,11 +190,19 @@
                 Don't have an account? <a href="{{ route('register') }}">Create an account</a>
             </div>
 
-            {{-- <div class="demo-box">
-                <strong>Default Manager Account:</strong><br>
-                Email: <code>admin@sedd.lk</code><br>
-                Password: <code>password123</code>
-            </div> --}}
+            <div class="demo-box">
+                <strong>Demo Accounts to Test Separation:</strong><br>
+                <div style="margin-top:6px;">
+                    🏛️ <strong>SEDD Division Officer:</strong><br>
+                    Email: <code>officer@sedd.lk</code> &middot; Pass: <code>officer123</code><br>
+                    <span style="font-size:11px; color:#64748b;">(Creates & manages MSME Practical Marketing Plans)</span>
+                </div>
+                <div style="margin-top:8px;">
+                    🏢 <strong>Company Management Team:</strong><br>
+                    Email: <code>company@agrofoods.lk</code> &middot; Pass: <code>company123</code><br>
+                    <span style="font-size:11px; color:#64748b;">(Sets company goals, partitions targets & allocates to reps)</span>
+                </div>
+            </div>
         </div>
     </div>
 </body>

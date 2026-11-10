@@ -5,10 +5,9 @@
 @section('content')
 <div class="head">
     <div>
-        <h1 style="font-size:24px; margin:0 0 6px;">Sales Income Forecast & Goals</h1>
-        <div class="mute">Company product-wise goals and assigned rep targets.</div>
+        <h1 style="font-size:24px; margin:0 0 6px;">Sales Income Forecast & Rep Allocations</h1>
+        <div class="mute">Company product-wise goals and partitioned sales rep targets.</div>
     </div>
-    <a class="btn" href="{{ route('forecast.create') }}">+ Set New Goal / Cascade</a>
 </div>
 
 @if(session('status'))

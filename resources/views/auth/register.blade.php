@@ -159,6 +159,19 @@
                 </div>
 
                 <div class="form-group">
+                    <label>Account Role *</label>
+                    <select name="role" required style="font: inherit; padding: 10px 14px; border: 1px solid var(--line); border-radius: 8px; background: #fff; width: 100%;">
+                        <option value="company" {{ old('role') == 'company' ? 'selected' : '' }}>🏢 Company Team / Manager (Sets goals & allocates to reps)</option>
+                        <option value="officer" {{ old('role') == 'officer' ? 'selected' : '' }}>🏛️ SEDD Division Officer (Creates MSME Marketing Plans)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Business / Division Name</label>
+                    <input type="text" name="organization_name" value="{{ old('organization_name') }}" placeholder="e.g. Ceylon Agro Foods or Gampaha Division">
+                </div>
+
+                <div class="form-group">
                     <label>Password (at least 6 characters)</label>
                     <input type="password" name="password" required placeholder="••••••••">
                 </div>

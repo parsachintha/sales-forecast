@@ -8,7 +8,13 @@
         <h1 style="font-size:24px; margin:0 0 6px;">Small Enterprise Development Division (SEDD)</h1>
         <div style="color:var(--mute); font-size:15px;">MSME Practical Marketing Plans</div>
     </div>
-    <a href="{{ route('marketing-plan.create') }}" class="btn">+ Create New Marketing Plan</a>
+    @auth
+        @if(Auth::user()->isOfficer())
+            <a href="{{ route('marketing-plan.create') }}" class="btn">+ Create New Marketing Plan</a>
+        @endif
+    @else
+        <a href="{{ route('login') }}" class="btn ghost">Sign In</a>
+    @endauth
 </div>
 
 <div class="card" style="padding:0; overflow:hidden;">
@@ -39,12 +45,18 @@
                     <td>{{ Str::limit($plan->main_product_service_summary, 40) ?? '-' }}</td>
                     <td style="text-align:right; white-space:nowrap;">
                         <a href="{{ route('marketing-plan.show', $plan) }}" class="btn ghost" style="padding:4px 10px; font-size:12px;">View Document</a>
-                        <a href="{{ route('marketing-plan.edit', $plan) }}" class="btn" style="padding:4px 10px; font-size:12px;">Edit</a>
-                        <form action="{{ route('marketing-plan.destroy', $plan) }}" method="POST" style="display:inline-block;" onsubmit="return confirm('Are you sure you want to delete this marketing plan?');">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="btn danger">Delete</button>
-                        </form>
+                        @auth
+                            @if(Auth::user()->isOfficer())
+                                <a href="{{ route('marketing-plan.edit', $plan) }}" class="btn" style="padding:4px 10px; font-size:12px;">Edit</a>
+                                <form action="{{ route('marketing-plan.destroy', $plan) }}" method="POST" style="display:inline-block;" onsubmit="return confirm('Are you sure you want to delete this marketing plan?');">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn danger">Delete</button>
+                                </form>
+                            @else
+                                <a href="{{ route('forecast.create', ['plan_id' => $plan->id]) }}" class="btn" style="padding:4px 10px; font-size:12px; background:#059669; border-color:#047857;">Allocate Reps</a>
+                            @endif
+                        @endauth
                     </td>
                 </tr>
             @empty

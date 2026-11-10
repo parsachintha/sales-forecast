@@ -219,22 +219,49 @@
             
             <div class="nav-section">
                 <nav class="nav-tabs">
-                    <a href="{{ route('marketing-plan.index') }}" class="{{ request()->routeIs('marketing-plan.*') ? 'active' : '' }}">
-                        📋 Marketing Plans
-                    </a>
-                    <a href="{{ route('forecast.index') }}" class="{{ request()->routeIs('forecast.*') ? 'active' : '' }}">
-                        📊 Rep Forecasts
-                    </a>
+                    @auth
+                        @if(Auth::user()->isOfficer())
+                            <a href="{{ route('marketing-plan.index') }}" class="{{ request()->routeIs('marketing-plan.*') ? 'active' : '' }}">
+                                📋 Marketing Plans
+                            </a>
+                        @elseif(Auth::user()->isCompany())
+                            <a href="{{ route('forecast.index') }}" class="{{ request()->routeIs('forecast.*') ? 'active' : '' }}">
+                                📊 Rep Allocation & Goals
+                            </a>
+                            <a href="{{ route('marketing-plan.index') }}" class="{{ request()->routeIs('marketing-plan.*') ? 'active' : '' }}">
+                                📋 Reference Plans
+                            </a>
+                        @endif
+                    @else
+                        <a href="{{ route('marketing-plan.index') }}" class="{{ request()->routeIs('marketing-plan.*') ? 'active' : '' }}">
+                            📋 Marketing Plans
+                        </a>
+                        <a href="{{ route('forecast.index') }}" class="{{ request()->routeIs('forecast.*') ? 'active' : '' }}">
+                            📊 Rep Allocation & Goals
+                        </a>
+                    @endauth
                 </nav>
 
-                <a href="{{ route('marketing-plan.create') }}" class="btn-create-plan">
-                    <span class="icon">+</span>
-                    <span>New Marketing Plan</span>
-                </a>
-
                 @auth
+                    @if(Auth::user()->isOfficer())
+                        <a href="{{ route('marketing-plan.create') }}" class="btn-create-plan">
+                            <span class="icon">+</span>
+                            <span>New Marketing Plan</span>
+                        </a>
+                    @elseif(Auth::user()->isCompany())
+                        <a href="{{ route('forecast.create') }}" class="btn-create-plan" style="background:#059669; border-color:#047857;">
+                            <span class="icon">+</span>
+                            <span>Set Goals & Allocate Reps</span>
+                        </a>
+                    @endif
+
                     <div style="display:flex; align-items:center; gap:10px; margin-left:8px; border-left:1px solid #cbd5e1; padding-left:12px;">
-                        <span style="font-size:13px; font-weight:600; color:#334155;">👤 {{ Auth::user()->name }}</span>
+                        <div style="display:flex; flex-direction:column; align-items:flex-end; line-height:1.2;">
+                            <span style="font-size:13px; font-weight:700; color:#1e293b;">{{ Auth::user()->name }}</span>
+                            <span style="font-size:11px; font-weight:600; color:{{ Auth::user()->isOfficer() ? '#1d4ed8' : '#047857' }};">
+                                {{ Auth::user()->roleLabel() }}
+                            </span>
+                        </div>
                         <form method="POST" action="{{ route('logout') }}" style="margin:0;">
                             @csrf
                             <button type="submit" class="btn ghost" style="padding:4px 10px; font-size:12px; color:#dc2626; border-color:#fca5a5;">Sign Out</button>

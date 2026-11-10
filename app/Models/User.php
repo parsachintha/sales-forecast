@@ -22,6 +22,8 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'role', // 'officer' or 'company'
+        'organization_name',
     ];
 
     /**
@@ -45,5 +47,24 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function isOfficer(): bool
+    {
+        return $this->role === 'officer';
+    }
+
+    public function isCompany(): bool
+    {
+        return $this->role === 'company';
+    }
+
+    public function roleLabel(): string
+    {
+        return match($this->role) {
+            'officer' => 'SEDD Division Officer',
+            'company' => 'Company Management',
+            default => 'User',
+        };
     }
 }
