@@ -4,13 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Models\MarketingPlan;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class MarketingPlanController extends Controller
 {
     public function index()
     {
         $plans = MarketingPlan::latest()->get();
-        return view('marketing.index', compact('plans'));
+        return Inertia::render('Marketing/Index', ['plans' => $plans]);
     }
 
     public function create()
@@ -37,7 +38,7 @@ class MarketingPlanController extends Controller
             ],
         ]);
 
-        return view('marketing.create', compact('plan'));
+        return Inertia::render('Marketing/Form', ['plan' => $plan, 'isEdit' => false]);
     }
 
     public function store(Request $request)
@@ -51,13 +52,13 @@ class MarketingPlanController extends Controller
     public function show(MarketingPlan $marketing_plan)
     {
         $plan = $marketing_plan;
-        return view('marketing.show', compact('plan'));
+        return Inertia::render('Marketing/Show', ['plan' => $plan]);
     }
 
     public function edit(MarketingPlan $marketing_plan)
     {
         $plan = $marketing_plan;
-        return view('marketing.edit', compact('plan'));
+        return Inertia::render('Marketing/Form', ['plan' => $plan, 'isEdit' => true]);
     }
 
     public function update(Request $request, MarketingPlan $marketing_plan)

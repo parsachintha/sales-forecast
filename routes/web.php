@@ -13,7 +13,10 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // Marketing plan & root route
 Route::get('/', function () {
-    if (auth()->check() && auth()->user()->isCompany()) {
+    if (!auth()->check()) {
+        return redirect()->route('login');
+    }
+    if (auth()->user()->isCompany()) {
         return redirect()->route('forecast.index');
     }
     return redirect()->route('marketing-plan.index');

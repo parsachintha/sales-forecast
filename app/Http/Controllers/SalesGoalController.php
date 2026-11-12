@@ -12,6 +12,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use Inertia\Inertia;
 
 class SalesGoalController extends Controller
 {
@@ -28,7 +29,10 @@ class SalesGoalController extends Controller
 
         $companyGoals = CompanyGoal::orderByDesc('year')->get();
 
-        return view('forecast.index', compact('goals', 'companyGoals'));
+        return Inertia::render('Forecast/Index', [
+            'goals' => $goals,
+            'companyGoals' => $companyGoals,
+        ]);
     }
 
     /** Form: assign a new goal (Company cascade mode or single rep mode). */
@@ -43,7 +47,11 @@ class SalesGoalController extends Controller
             $selectedPlan = MarketingPlan::find($request->input('plan_id'));
         }
 
-        return view('forecast.create', compact('reps', 'marketingPlans', 'selectedPlan'));
+        return Inertia::render('Forecast/Create', [
+            'reps' => $reps,
+            'marketingPlans' => $marketingPlans,
+            'selectedPlan' => $selectedPlan,
+        ]);
     }
 
     /** Save either a company-wide cascading goal or a single rep goal. */
@@ -200,7 +208,11 @@ class SalesGoalController extends Controller
         $goal->load('rep');
         $s = $this->forecast->grid($goal, $asOf);
 
-        return view('forecast.show', compact('goal', 's', 'asOf'));
+        return Inertia::render('Forecast/Show', [
+            'goal' => $goal,
+            's' => $s,
+            'asOf' => $asOf->toDateString(),
+        ]);
     }
 
     /** Manager modified individual month targets; rebalance if needed. */
